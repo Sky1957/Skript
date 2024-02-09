@@ -1,0 +1,97 @@
+
+function listup():
+    loop all players:
+        if {vanish::%loop-player's UUID%} is not set:
+            if {-Vanish/isVanished::%loop-player%} is not set:
+                add 1 to {_amount}
+    set {amount} to {_amount}
+
+
+command /vanish:
+    description: On me voit, on me voit plus
+    aliases: v
+    permission: vanish.sky
+    permission message: &cVous n'avez pas la permission de faire cela !
+    executable by: players
+    trigger:
+        if {-Vanish/isVanished::%sender%} = true:
+            reveal sender to all players
+            make player execute command "/godmode off"
+            delete {-Vanish/isVanished::%sender%}
+            listup()
+            delete line 13 of player's scoreboard
+            remove night vision from player
+            remove glowing from player
+            loop all players:
+                if loop-player has permission "vanish.sky":
+                    send "&c&l[&c&lStaff&c&l] &3%player% &aredeviens visible" to loop-player
+            exit trigger
+        set line 13 of player's scoreboard to "&c&l[Vanish]"
+        loop all players:
+            if loop-player has permission "vanish.sky":
+                send "&c&l[&c&lStaff&c&l] &3%player% &cdeviens invisible" to loop-player
+            else:
+                hide sender from loop-player
+        apply potion of night vision of tier 255 to the player for 999 days
+        apply potion of glowing of tier 255 to the player for 999 days
+        set fly mode of player to true
+        make player execute command "/godmode on"
+        set {-Vanish/isVanished::%sender%} to true
+        listup()
+        while {-Vanish/isVanished::%sender%} = true:
+            send action bar "<green>Vanish: ON" to sender
+            wait 1 second
+
+on join:
+    loop indices of {-Vanish/isVanished::*}:
+        if player has permission "vanish.sky":
+            send "&c&l[&c&lStaff&c&l] %loop-value% est en vanish" to player
+        else:
+            hide loop-value parsed as player from event-player
+on damage:
+    if {-Vanish/isVanished::%victim%} is set:
+        cancel event
+
+on quit:
+    delete {-Vanish/isVanished::%event-player%}
+
+on pickup:
+    if {-Vanish/isVanished::%player%} = true:
+        cancel event
+
+on chat:
+    if {-Vanish/isVanished::%player%} = true:
+        cancel event
+        make player execute command "/sc %message%"
+
+# on right click on player:
+#    if {-Vanish/isVanished::%player%} is set:
+#        open the targeted player's inventory for the player
+
+command /staff:
+    description: staff
+    permission: minesia.staffchat
+    permission message: &cVous n'avez pas la permission de faire cela !
+    executable by: players
+    trigger:
+        loop all players:
+            if loop-player has permission "minesia.staffchat":
+                if {vanish::%loop-player's UUID%} is not set:
+                    if {-Vanish/isVanished::%loop-player%} is set:
+                        set {_staff::%loop-value%} to "%loop-player's prefix% : &b%loop-player% &4&l[VANISH]"
+                    else:
+                        set {_staff::%loop-value%} to "%loop-player's prefix% : &b%loop-player%"
+        set {_help} to "%{_staff::*}%"
+        replace all "," with "%nl%" in {_help}
+        replace all "and" with "%nl%" in {_help}
+        replace all "<none>" with "Pas de staff en ligne ?" in {_help}
+        send "&cListe des staff (%amount of {_staff::*}%) :%nl%%nl% %{_help}%" to player
+
+
+
+on join:
+    loop all players:
+        if {vanish::%loop-player's UUID%} is not set:
+            if {-Vanish/isVanished::%loop-player%} is not set:
+                add 1 to {_amount}
+    set {amount} to {_amount}
